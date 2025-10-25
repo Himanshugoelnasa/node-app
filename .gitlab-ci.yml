@@ -1,0 +1,31 @@
+stages:
+  - build
+  - deploy
+
+build_job:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker info
+  script:
+    - echo "Building app..."
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker build -t himanshugoelnasa/node-test:$CI_COMMIT_SHA .
+    - docker tag himanshugoelnasa/node-test:$CI_COMMIT_SHA himanshugoelnasa/node-test:latest
+    - docker push himanshugoelnasa/node-test:$CI_COMMIT_SHA
+    - docker push himanshugoelnasa/node-test:latest
+
+deploy_job:
+  stage: deploy
+  tags:
+    - ec2-runner
+  script:
+    - echo "Deploying app on EC2..."
+    - docker pull himanshugoelnasa/node-test:latest
+    - docker stop nodejs-test-container || true
+    - docker rm nodejs-test-container || true
+    - docker run -d -p 5000:5000 --name nodejs-test-container himanshugoelnasa/node-test:latest
+  only:
+    - master

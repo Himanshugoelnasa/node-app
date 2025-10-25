@@ -1,0 +1,9 @@
+sudo apt-get update
+sudo apt instal docker.io -y
+sudo systemctl start docker
+sudo chmod 666 /var/run/docker.sock
+sudo systemctl enable docker 
+
+
+sudo chmod u+r /home/gitlab-runner/.bashrc
+sudo systemctl restart gitlab-runner.service
